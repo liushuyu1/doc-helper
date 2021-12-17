@@ -1,0 +1,71 @@
+buildscript {
+    repositories {
+        jcenter()
+        mavenLocal()
+        mavenCentral()
+        maven { url "http://repo.spring.io/release" }
+        maven { url "http://repo.spring.io/milestone" }
+        maven { url "http://repo.spring.io/snapshot" }
+        maven { url "https://plugins.gradle.org/m2/" }
+    }
+
+    dependencies {
+        classpath "io.spring.gradle:dependency-management-plugin:1.0.10.RELEASE"
+        classpath "org.springframework.boot:spring-boot-gradle-plugin:2.3.10.RELEASE"
+    }
+}
+
+plugins {
+    id 'java'
+}
+apply plugin: 'org.springframework.boot'
+apply plugin: 'io.spring.dependency-management'
+apply plugin: 'distribution'
+
+group 'com.helper.doc'
+version '1.0.0'
+
+repositories {
+    //platon-dev
+    maven { url 'https://sdk.platon.network/nexus/content/groups/public/' }
+    //platon-snapshots
+    maven { url "http://192.168.9.39:8081/repository/maven-snapshots/" }
+    //platon-public
+    maven { url "https://sdk.platon.network/nexus/content/groups/public/" }
+    mavenCentral()
+}
+
+def springbootVersion = "2.3.2.RELEASE"
+dependencies {
+    //三方包
+    implementation "org.springframework.boot:spring-boot-starter-aop:${springbootVersion}"
+    implementation 'com.alibaba:transmittable-thread-local:2.12.1'
+    implementation group: 'cn.hutool', name: 'hutool-all', version: '5.5.7'
+    compileOnly 'org.projectlombok:lombok:1.18.12'
+    annotationProcessor 'org.projectlombok:lombok:1.18.12'
+    implementation "org.springframework.boot:spring-boot-starter:${springbootVersion}"
+    implementation "org.springframework.boot:spring-boot-starter-web:${springbootVersion}"
+    implementation group: 'org.springframework.boot', name: 'spring-boot-starter-validation', version: "${springbootVersion}"
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+    // https://mvnrepository.com/artifact/com.github.xiaoymin/knife4j-spring-boot-starter
+    implementation group: 'com.github.xiaoymin', name: 'knife4j-spring-boot-starter', version: '3.0.2'
+
+}
+
+task copyResources(type: Copy) {
+    file('build/package').mkdirs()
+    from('build/libs').into('build/package')
+}
+
+distributions {
+    monitor {
+        distributionBaseName=project.name
+        contents {
+            from { 'build/package' }
+        }
+    }
+}
+monitorDistTar.dependsOn  'copyResources'
+monitorDistTar.compression = Compression.GZIP
+monitorDistTar.archiveExtension = 'tar.gz'
+task buildTar(dependsOn: ['build',monitorDistTar]){}
